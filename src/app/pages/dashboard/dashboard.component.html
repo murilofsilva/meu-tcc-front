@@ -1,5 +1,22 @@
 <div class="animate-fade-in">
   <h2 class="text-3xl font-bold mb-6">Painel Principal</h2>
+  
+  <!-- Botão temporário para desenvolvimento -->
+  <div class="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+    <p class="text-sm text-yellow-800 mb-2">🚧 <strong>Modo Desenvolvimento:</strong> Papel atual: {{ user()?.role }}</p>
+    <button 
+      (click)="switchToProfessor()"
+      class="mr-2 px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+    >
+      Alternar para Professor
+    </button>
+    <button 
+      (click)="switchToCoordenador()"
+      class="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+    >
+      Alternar para Coordenador
+    </button>
+  </div>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     @for (action of actions; track action.title) {
       <div 

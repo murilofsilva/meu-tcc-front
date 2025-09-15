@@ -14,8 +14,8 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
   
-  onLogin(role: 'Professor' | 'Coordenador de Inovação'): void {
-    this.authService.login(role);
-    this.notificationService.show(`Login como ${role} realizado com sucesso!`);
+  onLogin(): void {
+    this.authService.login();
+    this.notificationService.show('Login realizado com sucesso!');
   }
 }

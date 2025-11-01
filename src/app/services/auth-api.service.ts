@@ -4,23 +4,34 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { LoginRequest, LoginResponse, RegisterRequest, Usuario } from '../models/auth.models';
 
+/**
+ * Serviço responsável por chamadas HTTP relacionadas à autenticação
+ */
 @Injectable({
   providedIn: 'root'
 })
-export class ApiService {
+export class AuthApiService {
   private http = inject(HttpClient);
-  private apiUrl = environment.apiUrl;
+  private apiUrl = `${environment.apiUrl}/auth`;
 
-  // Auth endpoints
+  /**
+   * Faz login no sistema
+   */
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials);
+    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials);
   }
 
+  /**
+   * Registra um novo usuário (público)
+   */
   register(data: RegisterRequest): Observable<Usuario> {
-    return this.http.post<Usuario>(`${this.apiUrl}/auth/register`, data);
+    return this.http.post<Usuario>(`${this.apiUrl}/register`, data);
   }
 
+  /**
+   * Obtém os dados do usuário autenticado
+   */
   getCurrentUser(): Observable<Usuario> {
-    return this.http.get<Usuario>(`${this.apiUrl}/auth/me`);
+    return this.http.get<Usuario>(`${this.apiUrl}/me`);
   }
 }

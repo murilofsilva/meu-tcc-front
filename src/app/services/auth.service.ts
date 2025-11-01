@@ -2,7 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, tap } from 'rxjs/operators';
 import { throwError } from 'rxjs';
-import { ApiService } from './api.service';
+import { AuthApiService } from './auth-api.service';
 import { Usuario, LoginRequest } from '../models/auth.models';
 
 @Injectable({
@@ -10,7 +10,7 @@ import { Usuario, LoginRequest } from '../models/auth.models';
 })
 export class AuthService {
   private router = inject(Router);
-  private apiService = inject(ApiService);
+  private authApiService = inject(AuthApiService);
   private userSignal = signal<Usuario | null>(null);
 
   user = this.userSignal.asReadonly();
@@ -63,7 +63,7 @@ export class AuthService {
     const credentials: LoginRequest = { email, senha: password };
 
     return new Promise((resolve, reject) => {
-      this.apiService.login(credentials)
+      this.authApiService.login(credentials)
         .pipe(
           tap(response => {
             this.saveToStorage(response.token, response.usuario);

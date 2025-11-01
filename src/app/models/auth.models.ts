@@ -29,3 +29,9 @@ export interface RegisterRequest {
   senha: string;
   perfil: PerfilUsuario;
 }
+
+export interface RegisterProfessorRequest {
+  nome: string;
+  email: string;
+  senha: string;
+}

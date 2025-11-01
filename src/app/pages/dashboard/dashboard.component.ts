@@ -35,6 +35,7 @@ export class DashboardComponent {
     if (userProfile === PerfilUsuario.DIRETOR || userProfile === PerfilUsuario.ADMIN) {
       return [
         ...baseActions,
+        { title: 'Cadastrar Professor', icon: 'user-plus', route: '/cadastro-professor' },
         { title: 'Aprovar Solicitações', icon: 'check', route: '/aprovacoes' },
         { title: 'Gerar Relatórios', icon: 'document', action: 'reports' }
       ];

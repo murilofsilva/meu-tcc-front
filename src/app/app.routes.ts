@@ -7,15 +7,20 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
     canActivate: [loginGuard]
   },
-  { 
-    path: 'dashboard', 
+  {
+    path: 'dashboard',
     loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [authGuard]
   },
-  { 
-    path: '', 
-    redirectTo: '/login', 
-    pathMatch: 'full' 
+  {
+    path: 'cadastro-professor',
+    loadComponent: () => import('./pages/cadastro-professor/cadastro-professor.component').then(m => m.CadastroProfessorComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: '',
+    redirectTo: '/login',
+    pathMatch: 'full'
   },
   { 
     path: '**', 

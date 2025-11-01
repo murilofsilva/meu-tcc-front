@@ -10,12 +10,12 @@
     <div class="flex items-center space-x-4">
       @if (user(); as currentUser) {
         <span class="text-sm text-gray-600 hidden sm:block">
-          Perfil: <span class="font-semibold">{{ currentUser.role }}</span>
+          {{ currentUser.nome }} • <span class="font-semibold">{{ currentUser.perfil }}</span>
         </span>
       }
-      
-      <button 
-        (click)="onLogout()" 
+
+      <button
+        (click)="onLogout()"
         class="flex items-center text-sm text-red-500 hover:text-red-700 transition-colors"
       >
         <svg class="w-4 h-4 mr-1 transform rotate-180" fill="currentColor" viewBox="0 0 24 24">

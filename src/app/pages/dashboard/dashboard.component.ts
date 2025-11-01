@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { PerfilUsuario } from '../../models/auth.models';
 
 interface DashboardAction {
   title: string;
@@ -20,26 +21,28 @@ interface DashboardAction {
 export class DashboardComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
-  
+
   user = this.authService.user;
-  
+
   get actions(): DashboardAction[] {
     const baseActions = [
       { title: 'Novo Agendamento', icon: 'plus', route: '/agendamento' },
       { title: 'Consultar Repositório', icon: 'search', route: '/repositorio' }
     ];
-    
-    if (this.user()?.role === 'Coordenador de Inovação') {
+
+    const userProfile = this.user()?.perfil;
+
+    if (userProfile === PerfilUsuario.DIRETOR || userProfile === PerfilUsuario.ADMIN) {
       return [
         ...baseActions,
         { title: 'Aprovar Solicitações', icon: 'check', route: '/aprovacoes' },
         { title: 'Gerar Relatórios', icon: 'document', action: 'reports' }
       ];
     }
-    
+
     return baseActions;
   }
-  
+
   onActionClick(action: DashboardAction): void {
     if (action.route) {
       this.router.navigate([action.route]);

@@ -23,6 +23,16 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'agendamentos',
+    loadComponent: () => import('./pages/agendamentos/agendamentos.component').then(m => m.AgendamentosComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'aprovacoes',
+    loadComponent: () => import('./pages/aprovacoes/aprovacoes.component').then(m => m.AprovacoesComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: '',
     redirectTo: '/login',
     pathMatch: 'full'

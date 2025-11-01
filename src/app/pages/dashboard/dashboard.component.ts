@@ -25,24 +25,28 @@ export class DashboardComponent {
   user = this.authService.user;
 
   get actions(): DashboardAction[] {
-    const baseActions = [
-      { title: 'Novo Agendamento', icon: 'plus', route: '/agendamento' },
-      { title: 'Consultar Repositório', icon: 'search', route: '/repositorio' }
-    ];
-
     const userProfile = this.user()?.perfil;
 
+    // Ações para Professores
+    if (userProfile === PerfilUsuario.PROFESSOR) {
+      return [
+        { title: 'Minhas Reservas', icon: 'calendar', route: '/agendamentos' },
+        { title: 'Consultar Repositório', icon: 'search', route: '/repositorio' }
+      ];
+    }
+
+    // Ações para Diretor e Admin
     if (userProfile === PerfilUsuario.DIRETOR || userProfile === PerfilUsuario.ADMIN) {
       return [
-        ...baseActions,
+        { title: 'Aprovar Reservas', icon: 'clipboard-list', route: '/aprovacoes' },
         { title: 'Gerenciar Salas', icon: 'building', route: '/salas' },
         { title: 'Cadastrar Professor', icon: 'user-plus', route: '/cadastro-professor' },
-        { title: 'Consultar solicitações de reserva', icon: 'clipboard-list', route: '/aprovacoes' },
+        { title: 'Consultar Repositório', icon: 'search', route: '/repositorio' },
         { title: 'Gerar Relatórios', icon: 'document', action: 'reports' }
       ];
     }
 
-    return baseActions;
+    return [];
   }
 
   onActionClick(action: DashboardAction): void {

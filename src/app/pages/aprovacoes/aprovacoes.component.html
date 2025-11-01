@@ -1,0 +1,271 @@
+<div class="min-h-screen bg-gray-50 p-6 overflow-y-auto">
+  <div class="max-w-7xl mx-auto pb-8">
+    <!-- Header -->
+    <div class="mb-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Aprovação de Reservas</h1>
+          <p class="text-gray-600 mt-1">Gerencie as solicitações de reserva de laboratórios</p>
+        </div>
+        <button
+          (click)="voltar()"
+          class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors shadow-md"
+        >
+          Voltar
+        </button>
+      </div>
+
+      <!-- Filtros -->
+      <div class="bg-white rounded-lg shadow-md p-4">
+        <label for="filtro" class="block text-sm font-medium text-gray-700 mb-2">
+          Filtrar por status:
+        </label>
+        <select
+          id="filtro"
+          [(ngModel)]="filtroStatus"
+          (change)="onFiltroChange()"
+          class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="PENDENTE">Pendentes</option>
+          <option value="APROVADO">Aprovadas</option>
+          <option value="REPROVADO">Reprovadas</option>
+          <option value="AGUARDANDO_AJUSTES">Aguardando Ajustes</option>
+          <option value="CANCELADO">Canceladas</option>
+          <option value="TODAS">Todas</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading) {
+      <div class="text-center py-12">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-gray-600">Carregando reservas...</p>
+      </div>
+    }
+
+    <!-- Lista de Reservas -->
+    @if (!isLoading) {
+      @if (reservasFiltradas.length === 0) {
+        <div class="text-center py-12">
+          <svg class="w-24 h-24 mx-auto text-gray-400 mb-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">Nenhuma reserva encontrada</h3>
+          <p class="text-gray-500">Não há reservas com os filtros selecionados.</p>
+        </div>
+      } @else {
+        <div class="grid grid-cols-1 gap-4">
+          @for (reserva of reservasFiltradas; track reserva.id) {
+            <div class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+              <!-- Header do Card -->
+              <div class="px-6 pt-4 pb-2 bg-gradient-to-r from-purple-500 to-indigo-600">
+                <div class="flex justify-between items-center">
+                  <h3 class="text-xl font-bold text-white">{{ reserva.titulo }}</h3>
+                  <span
+                    [class]="getStatusClass(reserva.status)"
+                    class="px-3 py-1 rounded-full text-xs font-semibold text-white"
+                  >
+                    {{ getStatusLabel(reserva.status) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Conteúdo do Card -->
+              <div class="p-6">
+                <!-- Informações do Professor -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 bg-blue-50 p-3 rounded-lg">
+                  <div class="flex items-center text-gray-700">
+                    <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    <span><strong>Professor:</strong> {{ reserva.professor.nome }}</span>
+                  </div>
+                  <div class="flex items-center text-gray-700">
+                    <svg class="w-5 h-5 mr-2 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    <span>{{ reserva.professor.email }}</span>
+                  </div>
+                </div>
+
+                <!-- Informações da Reserva -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  <div class="flex items-center text-gray-700">
+                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20,18c1.1,0,2-0.9,2-2V6c0-1.1-0.9-2-2-2H4C2.9,4,2,4.9,2,6v10c0,1.1,0.9,2,2,2H0v2h24v-2H20z M4,6h16v10H4V6z"/>
+                    </svg>
+                    <span><strong>Laboratório:</strong> {{ reserva.laboratorio.nome }}</span>
+                  </div>
+                  @if (reserva.turma) {
+                    <div class="flex items-center text-gray-700">
+                      <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                      </svg>
+                      <span><strong>Turma:</strong> {{ reserva.turma }}</span>
+                    </div>
+                  }
+                </div>
+
+                <!-- Período -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 bg-gray-50 p-4 rounded-lg">
+                  <div>
+                    <p class="text-xs text-gray-500 mb-1">Início</p>
+                    <p class="text-gray-800 font-semibold flex items-center">
+                      <svg class="w-4 h-4 mr-1 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                      </svg>
+                      {{ formatDateTime(reserva.inicio) }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-xs text-gray-500 mb-1">Fim</p>
+                    <p class="text-gray-800 font-semibold flex items-center">
+                      <svg class="w-4 h-4 mr-1 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                      </svg>
+                      {{ formatDateTime(reserva.fim) }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Descrição -->
+                @if (reserva.descricao) {
+                  <div class="mb-4">
+                    <p class="text-sm font-medium text-gray-700 mb-1">Descrição da Atividade:</p>
+                    <p class="text-gray-600 text-sm bg-blue-50 p-3 rounded-lg">{{ reserva.descricao }}</p>
+                  </div>
+                }
+
+                <!-- Motivo do Status -->
+                @if (reserva.motivoStatus) {
+                  <div class="mb-4 bg-orange-50 border-l-4 border-orange-500 p-3 rounded">
+                    <p class="text-sm font-semibold text-orange-800 mb-1">
+                      @if (reserva.status === StatusReserva.REPROVADO) {
+                        Motivo da Reprovação:
+                      } @else if (reserva.status === StatusReserva.AGUARDANDO_AJUSTES) {
+                        Ajustes Solicitados:
+                      } @else {
+                        Observação:
+                      }
+                    </p>
+                    <p class="text-orange-700 text-sm">{{ reserva.motivoStatus }}</p>
+                  </div>
+                }
+
+                <!-- Footer com Data e Ações -->
+                <div class="flex justify-between items-center pt-4 border-t border-gray-200">
+                  <p class="text-xs text-gray-400">
+                    Solicitado em: {{ formatDateTime(reserva.criadoEm) }}
+                  </p>
+                  @if (podeAprovar(reserva)) {
+                    <div class="flex gap-2">
+                      <button
+                        (click)="abrirModalAprovar(reserva)"
+                        class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
+                      >
+                        Aprovar
+                      </button>
+                      <button
+                        (click)="abrirModalSolicitarAjustes(reserva)"
+                        class="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-semibold"
+                      >
+                        Ajustes
+                      </button>
+                      <button
+                        (click)="abrirModalReprovar(reserva)"
+                        class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-semibold"
+                      >
+                        Reprovar
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Modal de Confirmação -->
+    @if (showModal && reservaSelecionada) {
+      <div
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
+        (click)="fecharModal()"
+      >
+        <div
+          class="bg-white rounded-xl shadow-2xl w-full max-w-lg animate-scale-in"
+          (click)="$event.stopPropagation()"
+        >
+          <!-- Header do Modal -->
+          <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800">{{ getAcaoTitulo() }}</h2>
+            <button
+              (click)="fecharModal()"
+              class="text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Conteúdo do Modal -->
+          <div class="p-6">
+            <!-- Informações da Reserva -->
+            <div class="mb-4 bg-gray-50 p-4 rounded-lg">
+              <p class="font-semibold text-gray-800 mb-2">{{ reservaSelecionada.titulo }}</p>
+              <div class="space-y-1 text-sm text-gray-600">
+                <p><strong>Professor:</strong> {{ reservaSelecionada.professor.nome }}</p>
+                <p><strong>Laboratório:</strong> {{ reservaSelecionada.laboratorio.nome }}</p>
+                <p><strong>Período:</strong> {{ formatDateTime(reservaSelecionada.inicio) }} até {{ formatDateTime(reservaSelecionada.fim) }}</p>
+              </div>
+            </div>
+
+            <p class="text-gray-700 mb-4">{{ getAcaoMensagem() }}</p>
+
+            <!-- Campo de Motivo -->
+            @if (acaoSelecionada === 'reprovar' || acaoSelecionada === 'ajustes') {
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  Motivo <span class="text-red-500">*</span>
+                </label>
+                <textarea
+                  [(ngModel)]="motivo"
+                  rows="4"
+                  maxlength="500"
+                  placeholder="Digite o motivo..."
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  [class.border-red-500]="!motivo.trim()"
+                ></textarea>
+                <p class="text-xs text-gray-500 mt-1">{{ motivo.length }}/500 caracteres</p>
+              </div>
+            }
+
+            <!-- Botões -->
+            <div class="flex gap-3 pt-4">
+              <button
+                (click)="fecharModal()"
+                [disabled]="isSubmitting"
+                class="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+              <button
+                (click)="confirmarAcao()"
+                [disabled]="isSubmitting"
+                [class]="acaoSelecionada === 'aprovar' ? 'bg-green-600 hover:bg-green-700' :
+                         acaoSelecionada === 'reprovar' ? 'bg-red-600 hover:bg-red-700' :
+                         'bg-orange-600 hover:bg-orange-700'"
+                class="flex-1 px-4 py-2 text-white rounded-lg transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {{ isSubmitting ? 'Processando...' : 'Confirmar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

@@ -106,12 +106,4 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem('auth_token');
   }
-
-  // Método temporário para desenvolvimento - alterar papel do usuário
-  switchRole(role: string): void {
-    const currentUser = this.userSignal();
-    if (currentUser) {
-      this.userSignal.set({ role });
-    }
-  }
 }

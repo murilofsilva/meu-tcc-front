@@ -50,13 +50,4 @@ export class DashboardComponent {
       alert('Funcionalidade de Relatórios em desenvolvimento.');
     }
   }
-
-  // Métodos temporários para desenvolvimento
-  switchToProfessor(): void {
-    this.authService.switchRole('Professor');
-  }
-
-  switchToCoordenador(): void {
-    this.authService.switchRole('Coordenador de Inovação');
-  }
 }

@@ -147,9 +147,18 @@ export class RepositorioComponent implements OnInit {
     this.router.navigate(['/planejamento-form', planejamento.id]);
   }
 
+  // Modal de detalhes
+  isDetailsModalOpen = false;
+  selectedPlanejamento: Planejamento | null = null;
+
   visualizarDetalhes(planejamento: Planejamento): void {
-    // TODO: Implementar modal ou página de detalhes
-    this.notificationService.show('Visualização de detalhes em desenvolvimento', 'info');
+    this.selectedPlanejamento = planejamento;
+    this.isDetailsModalOpen = true;
+  }
+
+  fecharModalDetalhes(): void {
+    this.isDetailsModalOpen = false;
+    this.selectedPlanejamento = null;
   }
 
   novoPlanejamento(): void {

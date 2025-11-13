@@ -39,6 +39,7 @@ export class DashboardComponent {
     if (userProfile === PerfilUsuario.DIRETOR || userProfile === PerfilUsuario.ADMIN) {
       return [
         { title: 'Aprovar Reservas', icon: 'clipboard-list', route: '/aprovacoes' },
+        { title: 'Aprovar Planejamentos', icon: 'clipboard-check', route: '/aprovacoes-planejamentos' },
         { title: 'Gerenciar Salas', icon: 'building', route: '/salas' },
         { title: 'Cadastrar Professor', icon: 'user-plus', route: '/cadastro-professor' },
         { title: 'Consultar Repositório', icon: 'search', route: '/repositorio' },

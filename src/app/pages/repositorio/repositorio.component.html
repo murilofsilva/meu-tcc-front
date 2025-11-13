@@ -194,4 +194,101 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal de Detalhes -->
+  <div
+    *ngIf="isDetailsModalOpen && selectedPlanejamento"
+    class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4"
+    (click)="fecharModalDetalhes()"
+  >
+    <div
+      class="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in-up"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Header do modal -->
+      <div class="p-6 border-b border-gray-200 sticky top-0 bg-white">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h3 class="text-2xl font-bold text-gray-800">{{ selectedPlanejamento.titulo }}</h3>
+            <p class="text-sm text-gray-600 mt-1">Por: {{ selectedPlanejamento.author.nome }}</p>
+          </div>
+          <button
+            (click)="fecharModalDetalhes()"
+            class="text-gray-500 hover:text-gray-700 transition-colors ml-4"
+          >
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Conteúdo do modal -->
+      <div class="p-6 space-y-4">
+        <!-- Status -->
+        <div>
+          <label class="text-sm font-semibold text-gray-700 block mb-1">Status</label>
+          <span
+            [ngClass]="getStatusClass(selectedPlanejamento.status)"
+            class="inline-block text-xs px-3 py-1 rounded-full font-semibold"
+          >
+            {{ getStatusLabel(selectedPlanejamento.status) }}
+          </span>
+        </div>
+
+        <!-- Área -->
+        <div>
+          <label class="text-sm font-semibold text-gray-700 block mb-1">Área/Disciplina</label>
+          <p class="text-gray-800 bg-gray-50 p-3 rounded-lg">{{ selectedPlanejamento.area }}</p>
+        </div>
+
+        <!-- Descrição -->
+        <div>
+          <label class="text-sm font-semibold text-gray-700 block mb-1">Descrição</label>
+          <p class="text-gray-800 bg-gray-50 p-3 rounded-lg whitespace-pre-wrap">{{ selectedPlanejamento.descricao }}</p>
+        </div>
+
+        <!-- Informações adicionais -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-sm font-semibold text-gray-700 block mb-1">Versão</label>
+            <p class="text-gray-800 bg-gray-50 p-3 rounded-lg">{{ selectedPlanejamento.versao }}</p>
+          </div>
+          <div>
+            <label class="text-sm font-semibold text-gray-700 block mb-1">Criado em</label>
+            <p class="text-gray-800 bg-gray-50 p-3 rounded-lg">{{ selectedPlanejamento.criadoEm | date: 'dd/MM/yyyy HH:mm' }}</p>
+          </div>
+        </div>
+
+        <!-- Autor -->
+        <div>
+          <label class="text-sm font-semibold text-gray-700 block mb-1">Autor</label>
+          <div class="bg-gray-50 p-3 rounded-lg">
+            <p class="text-gray-800">{{ selectedPlanejamento.author.nome }}</p>
+            <p class="text-sm text-gray-600">{{ selectedPlanejamento.author.email }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer com botões de ação -->
+      <div class="p-6 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+        <button
+          (click)="fecharModalDetalhes()"
+          class="flex items-center px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400"
+        >
+          Fechar
+        </button>
+        <button
+          *ngIf="selectedPlanejamento.status === StatusPlanejamento.PUBLICADO"
+          (click)="importarParaReserva(selectedPlanejamento); fecharModalDetalhes()"
+          class="flex items-center px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+        >
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          Importar para Reserva
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

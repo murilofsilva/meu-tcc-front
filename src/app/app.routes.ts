@@ -33,6 +33,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'aprovacoes-planejamentos',
+    loadComponent: () => import('./pages/aprovacoes-planejamentos/aprovacoes-planejamentos.component').then(m => m.AprovacoesPlanejamentosComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'repositorio',
     loadComponent: () => import('./pages/repositorio/repositorio.component').then(m => m.RepositorioComponent),
     canActivate: [authGuard]

@@ -88,4 +88,26 @@ export class PlanejamentoService {
     let params = new HttpParams().set('status', StatusPlanejamento.PUBLICADO);
     return this.http.get<Planejamento[]>(this.apiUrl, { params });
   }
+
+  /**
+   * Lista apenas planejamentos pendentes (para diretores)
+   */
+  listarPendentes(): Observable<Planejamento[]> {
+    let params = new HttpParams().set('status', StatusPlanejamento.PENDENTE);
+    return this.http.get<Planejamento[]>(this.apiUrl, { params });
+  }
+
+  /**
+   * Aprova um planejamento (muda status para PUBLICADO)
+   */
+  aprovar(id: number): Observable<Planejamento> {
+    return this.http.patch<Planejamento>(`${this.apiUrl}/${id}/aprovar`, {});
+  }
+
+  /**
+   * Reprova um planejamento com motivo opcional
+   */
+  reprovar(id: number, motivo?: string): Observable<Planejamento> {
+    return this.http.patch<Planejamento>(`${this.apiUrl}/${id}/reprovar`, { motivo });
+  }
 }

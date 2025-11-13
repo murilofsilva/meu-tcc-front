@@ -9,13 +9,13 @@ import { Planejamento, StatusPlanejamento } from '../../models/planejamento.mode
 import { PerfilUsuario } from '../../models/auth.models';
 
 @Component({
-  selector: 'app-aprovacoes',
+  selector: 'app-aprovacoes-planejamentos',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './aprovacoes.component.html',
-  styleUrls: ['./aprovacoes.component.css']
+  templateUrl: './aprovacoes-planejamentos.component.html',
+  styleUrls: ['./aprovacoes-planejamentos.component.css']
 })
-export class AprovacoesComponent implements OnInit {
+export class AprovacoesPlanejamentosComponent implements OnInit {
   private planejamentoService = inject(PlanejamentoService);
   private authService = inject(AuthService);
   private router = inject(Router);

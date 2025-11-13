@@ -1,5 +1,5 @@
-<div class="min-h-screen bg-gray-50 p-6 overflow-y-auto">
-  <div class="max-w-7xl mx-auto pb-8">
+<div class="max-w-7xl mx-auto animate-fade-in pb-8">
+  @if (!showForm) {
     <!-- Header -->
     <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
@@ -149,101 +149,142 @@
       }
     }
 
-    <!-- Modal de Formulário -->
-    @if (showForm) {
-      <div
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
+  }
+
+  <!-- Formulário de Reserva -->
+  @if (showForm) {
+    <div class="max-w-3xl mx-auto">
+      <!-- Botão voltar -->
+      <button
         (click)="fecharFormulario()"
+        class="flex items-center text-blue-600 hover:underline mb-4 transition-colors"
       >
-        <div
-          class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in"
-          (click)="$event.stopPropagation()"
-        >
-          <!-- Header do Modal -->
-          <div class="flex justify-between items-center p-6 border-b border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-800">
-              {{ isEditing ? 'Editar Reserva' : 'Nova Reserva' }}
-            </h2>
-            <button
-              (click)="fecharFormulario()"
-              class="text-gray-500 hover:text-gray-700 transition-colors"
+        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        Voltar para Minhas Reservas
+      </button>
+
+      <!-- Cabeçalho -->
+      <h2 class="text-3xl font-bold mb-6">
+        {{ isEditing ? 'Editar Reserva' : 'Nova Reserva' }}
+      </h2>
+
+      <!-- Formulário -->
+      <form (ngSubmit)="onSubmit()" class="bg-white p-6 rounded-xl shadow-lg">
+        <!-- Informação sobre planejamento importado -->
+        <div *ngIf="planejamentoSelecionado" class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-green-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/>
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-semibold text-green-900">
+                Reserva vinculada ao plano de aula
+              </p>
+              <p class="text-sm text-green-700 mt-1">
+                "{{ planejamentoSelecionado.titulo }}"
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Laboratório e Título lado a lado -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Laboratório -->
+          <div>
+            <label for="laboratorio" class="block text-sm font-semibold text-gray-700 mb-2">
+              Laboratório <span class="text-red-500">*</span>
+            </label>
+            <select
+              id="laboratorio"
+              [(ngModel)]="laboratorioId"
+              name="laboratorio"
+              required
+              [disabled]="isEditing"
+              (change)="onLaboratorioOuDataChange()"
+              class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
-              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
-            </button>
+              <option [value]="null">Selecione um laboratório</option>
+              @for (lab of laboratorios; track lab.id) {
+                <option [value]="lab.id">{{ lab.nome }} (Cap: {{ lab.capacidade }})</option>
+              }
+            </select>
+            @if (isEditing) {
+              <p class="text-xs text-gray-500 mt-1">Não pode ser alterado durante edição</p>
+            }
           </div>
 
-          <!-- Formulário -->
-          <form (ngSubmit)="onSubmit()" class="p-6 space-y-4">
-            <!-- Laboratório -->
-            <div>
-              <label for="laboratorio" class="block text-sm font-medium text-gray-700 mb-1">
-                Laboratório <span class="text-red-500">*</span>
-              </label>
-              <select
-                id="laboratorio"
-                [(ngModel)]="laboratorioId"
-                name="laboratorio"
-                required
-                [disabled]="isEditing"
-                (change)="onLaboratorioOuDataChange()"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-              >
-                <option [value]="null">Selecione um laboratório</option>
-                @for (lab of laboratorios; track lab.id) {
-                  <option [value]="lab.id">{{ lab.nome }} (Capacidade: {{ lab.capacidade }})</option>
-                }
-              </select>
-              @if (isEditing) {
-                <p class="text-xs text-gray-500 mt-1">O laboratório não pode ser alterado durante a edição</p>
-              }
-            </div>
+          <!-- Título -->
+          <div>
+            <label for="titulo" class="block text-sm font-semibold text-gray-700 mb-2">
+              Título da Atividade <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="titulo"
+              [(ngModel)]="titulo"
+              name="titulo"
+              required
+              maxlength="160"
+              placeholder="Ex: Aula prática de Química"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              {{ titulo.length }}/160 caracteres
+            </p>
+          </div>
+        </div>
 
-            <!-- Título -->
-            <div>
-              <label for="titulo" class="block text-sm font-medium text-gray-700 mb-1">
-                Título <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="titulo"
-                [(ngModel)]="titulo"
-                name="titulo"
-                required
-                maxlength="160"
-                placeholder="Ex: Aula prática de Química"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+        <!-- Data e Turma lado a lado -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Data -->
+          <div>
+            <label for="data" class="block text-sm font-semibold text-gray-700 mb-2">
+              Data da Reserva <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              id="data"
+              [(ngModel)]="data"
+              name="data"
+              required
+              (change)="onLaboratorioOuDataChange()"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
 
-            <!-- Data -->
-            <div>
-              <label for="data" class="block text-sm font-medium text-gray-700 mb-1">
-                Data da Reserva <span class="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                id="data"
-                [(ngModel)]="data"
-                name="data"
-                required
-                (change)="onLaboratorioOuDataChange()"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+          <!-- Turma -->
+          <div>
+            <label for="turma" class="block text-sm font-semibold text-gray-700 mb-2">
+              Turma (opcional)
+            </label>
+            <input
+              type="text"
+              id="turma"
+              [(ngModel)]="turma"
+              name="turma"
+              maxlength="80"
+              placeholder="Ex: 3º Ano A - Ensino Médio"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p class="text-xs text-gray-500 mt-1">
+              {{ turma.length }}/80 caracteres
+            </p>
+          </div>
+        </div>
 
-            <!-- Horários Ocupados -->
-            @if (laboratorioId && data) {
-              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div class="flex items-start">
-                  <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                  </svg>
-                  <div class="flex-1">
-                    <h4 class="text-sm font-semibold text-blue-900 mb-2">
-                      Horários já ocupados neste laboratório
-                    </h4>
+        <!-- Horários Ocupados -->
+        @if (laboratorioId && data) {
+          <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+              </svg>
+              <div class="flex-1">
+                <h4 class="text-sm font-semibold text-blue-900 mb-2">
+                  Horários já ocupados neste laboratório
+                </h4>
 
                     @if (isLoadingConflitos) {
                       <div class="flex items-center text-sm text-blue-700">
@@ -275,95 +316,93 @@
                           }
                         </div>
                       }
-                    }
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- Horários -->
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label for="horaInicio" class="block text-sm font-medium text-gray-700 mb-1">
-                  Hora de Início <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="time"
-                  id="horaInicio"
-                  [(ngModel)]="horaInicio"
-                  name="horaInicio"
-                  required
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label for="horaFim" class="block text-sm font-medium text-gray-700 mb-1">
-                  Hora de Fim <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="time"
-                  id="horaFim"
-                  [(ngModel)]="horaFim"
-                  name="horaFim"
-                  required
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                }
               </div>
             </div>
+          </div>
+        }
 
-            <!-- Turma -->
+        <!-- Horários -->
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-gray-700 mb-2">
+            Horário da Reserva <span class="text-red-500">*</span>
+          </label>
+          <div class="grid grid-cols-2 gap-4">
             <div>
-              <label for="turma" class="block text-sm font-medium text-gray-700 mb-1">
-                Turma
+              <label for="horaInicio" class="block text-xs font-medium text-gray-600 mb-1">
+                Início
               </label>
               <input
-                type="text"
-                id="turma"
-                [(ngModel)]="turma"
-                name="turma"
-                maxlength="80"
-                placeholder="Ex: 3º Ano A"
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                type="time"
+                id="horaInicio"
+                [(ngModel)]="horaInicio"
+                name="horaInicio"
+                required
+                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-
-            <!-- Descrição -->
             <div>
-              <label for="descricao" class="block text-sm font-medium text-gray-700 mb-1">
-                Descrição
+              <label for="horaFim" class="block text-xs font-medium text-gray-600 mb-1">
+                Término
               </label>
-              <textarea
-                id="descricao"
-                [(ngModel)]="descricao"
-                name="descricao"
-                rows="4"
-                maxlength="1000"
-                placeholder="Descreva o objetivo da aula ou atividade..."
-                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              ></textarea>
+              <input
+                type="time"
+                id="horaFim"
+                [(ngModel)]="horaFim"
+                name="horaFim"
+                required
+                class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
-
-            <!-- Botões -->
-            <div class="flex gap-3 pt-4">
-              <button
-                type="button"
-                (click)="fecharFormulario()"
-                [disabled]="isSubmitting"
-                class="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                [disabled]="isSubmitting"
-                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {{ isSubmitting ? 'Salvando...' : (isEditing ? 'Atualizar' : 'Criar Reserva') }}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
-      </div>
-    }
-  </div>
+
+        <!-- Descrição -->
+        <div class="mb-6">
+          <label for="descricao" class="block text-sm font-semibold text-gray-700 mb-2">
+            Descrição da Atividade (opcional)
+          </label>
+          <textarea
+            id="descricao"
+            [(ngModel)]="descricao"
+            name="descricao"
+            rows="6"
+            maxlength="1000"
+            placeholder="Descreva o objetivo da aula ou atividade, recursos necessários, observações relevantes..."
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+          ></textarea>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ descricao.length }}/1000 caracteres
+          </p>
+        </div>
+
+        <!-- Botões -->
+        <div class="flex gap-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            (click)="fecharFormulario()"
+            [disabled]="isSubmitting"
+            class="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-semibold disabled:bg-gray-100 disabled:cursor-not-allowed"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSubmitting"
+            class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            @if (isSubmitting) {
+              <svg class="animate-spin h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Salvando...</span>
+            } @else {
+              <span>{{ isEditing ? 'Atualizar Reserva' : 'Criar Reserva' }}</span>
+            }
+          </button>
+        </div>
+      </form>
+    </div>
+  }
 </div>

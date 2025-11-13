@@ -1,0 +1,16 @@
+/* Estilos customizados para o formulário de planejamento */
+
+textarea {
+  font-family: inherit;
+}
+
+/* Animação de spinner para o botão submit */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

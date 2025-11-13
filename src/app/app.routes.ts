@@ -33,6 +33,21 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'repositorio',
+    loadComponent: () => import('./pages/repositorio/repositorio.component').then(m => m.RepositorioComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'planejamento-form',
+    loadComponent: () => import('./pages/planejamento-form/planejamento-form.component').then(m => m.PlanejamentoFormComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'planejamento-form/:id',
+    loadComponent: () => import('./pages/planejamento-form/planejamento-form.component').then(m => m.PlanejamentoFormComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: '',
     redirectTo: '/login',
     pathMatch: 'full'

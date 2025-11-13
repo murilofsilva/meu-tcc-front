@@ -7,6 +7,7 @@ import { LaboratorioService } from '../../services/laboratorio.service';
 import { NotificationService } from '../../core/notification.service';
 import { Reserva, CreateReservaRequest, UpdateReservaRequest, StatusReserva } from '../../models/reserva.models';
 import { Laboratorio } from '../../models/laboratorio.models';
+import { Planejamento } from '../../models/planejamento.models';
 
 @Component({
   selector: 'app-agendamentos',
@@ -39,6 +40,8 @@ export class AgendamentosComponent implements OnInit {
   titulo: string = '';
   turma: string = '';
   descricao: string = '';
+  planejamentoSelecionado: Planejamento | null = null;
+  planejamentoId: number | null = null;
 
   // Status enum para o template
   StatusReserva = StatusReserva;
@@ -46,6 +49,18 @@ export class AgendamentosComponent implements OnInit {
   ngOnInit(): void {
     this.carregarReservas();
     this.carregarLaboratorios();
+
+    // Verifica se há um planejamento selecionado vindo do repositório
+    const navigation = this.router.getCurrentNavigation();
+    const state = navigation?.extras?.state || window.history.state;
+
+    if (state?.['planejamentoSelecionado']) {
+      this.planejamentoSelecionado = state['planejamentoSelecionado'];
+      this.planejamentoId = this.planejamentoSelecionado?.id || null;
+      this.titulo = this.planejamentoSelecionado?.titulo || '';
+      this.descricao = this.planejamentoSelecionado?.descricao || '';
+      this.showForm = true;
+    }
   }
 
   carregarReservas(): void {
@@ -122,6 +137,8 @@ export class AgendamentosComponent implements OnInit {
     this.titulo = '';
     this.turma = '';
     this.descricao = '';
+    this.planejamentoSelecionado = null;
+    this.planejamentoId = null;
     this.reservasConflitantes = [];
   }
 
@@ -223,7 +240,8 @@ export class AgendamentosComponent implements OnInit {
       fim: fim.toISOString(),
       titulo: this.titulo,
       turma: this.turma || undefined,
-      descricao: this.descricao || undefined
+      descricao: this.descricao || undefined,
+      planejamentoId: this.planejamentoId || undefined
     };
 
     this.isSubmitting = true;

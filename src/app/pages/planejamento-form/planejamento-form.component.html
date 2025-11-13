@@ -1,0 +1,146 @@
+<div class="max-w-3xl mx-auto animate-fade-in">
+  <!-- Botão voltar -->
+  <button
+    (click)="voltarRepositorio()"
+    class="flex items-center text-blue-600 hover:underline mb-4 transition-colors"
+  >
+    <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+    </svg>
+    Voltar ao Repositório
+  </button>
+
+  <!-- Cabeçalho -->
+  <h2 class="text-3xl font-bold mb-6">
+    {{ isEditMode ? 'Editar Plano de Aula' : 'Novo Plano de Aula' }}
+  </h2>
+
+  <!-- Formulário -->
+  <form (ngSubmit)="onSubmit()" class="bg-white p-6 rounded-xl shadow-lg">
+    <!-- Informação sobre status (apenas no modo edição) -->
+    <div *ngIf="isEditMode && planejamento" class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+      <div class="flex items-start">
+        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z"/>
+        </svg>
+        <div class="flex-1">
+          <p class="text-sm text-gray-700">
+            <span class="font-semibold">Status atual:</span>
+            <span class="ml-1" [ngClass]="{
+              'text-green-600': planejamento.status === 'PUBLICADO',
+              'text-yellow-600': planejamento.status === 'PENDENTE',
+              'text-orange-600': planejamento.status === 'AGUARDANDO_AJUSTES',
+              'text-red-600': planejamento.status === 'REPROVADO'
+            }">
+              {{ planejamento.status === 'PUBLICADO' ? 'Publicado' :
+                 planejamento.status === 'PENDENTE' ? 'Pendente' :
+                 planejamento.status === 'AGUARDANDO_AJUSTES' ? 'Aguardando Ajustes' :
+                 'Reprovado' }}
+            </span>
+          </p>
+          <p class="text-xs text-gray-600 mt-1">
+            Ao salvar alterações, o plano será submetido novamente para aprovação.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Título -->
+    <div class="mb-6">
+      <label for="titulo" class="block text-sm font-semibold text-gray-700 mb-2">
+        Título do Plano de Aula <span class="text-red-500">*</span>
+      </label>
+      <input
+        type="text"
+        id="titulo"
+        [(ngModel)]="formData.titulo"
+        name="titulo"
+        required
+        maxlength="200"
+        placeholder="Ex: Introdução à Lógica de Programação com Scratch"
+        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      />
+      <p class="text-xs text-gray-500 mt-1">
+        {{ formData.titulo.length }}/200 caracteres
+      </p>
+    </div>
+
+    <!-- Área/Disciplina -->
+    <div class="mb-6">
+      <label for="area" class="block text-sm font-semibold text-gray-700 mb-2">
+        Área/Disciplina <span class="text-red-500">*</span>
+      </label>
+      <select
+        id="area"
+        [(ngModel)]="formData.area"
+        name="area"
+        required
+        class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      >
+        <option value="">Selecione uma área</option>
+        <option *ngFor="let area of areas" [value]="area">{{ area }}</option>
+      </select>
+    </div>
+
+    <!-- Descrição -->
+    <div class="mb-6">
+      <label for="descricao" class="block text-sm font-semibold text-gray-700 mb-2">
+        Descrição do Plano de Aula <span class="text-red-500">*</span>
+      </label>
+      <textarea
+        id="descricao"
+        [(ngModel)]="formData.descricao"
+        name="descricao"
+        required
+        rows="10"
+        maxlength="2000"
+        placeholder="Descreva detalhadamente o plano de aula, incluindo:&#10;- Objetivos de aprendizagem&#10;- Conteúdos a serem abordados&#10;- Metodologia e atividades&#10;- Recursos necessários&#10;- Avaliação&#10;- Observações relevantes"
+        class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+      ></textarea>
+      <p class="text-xs text-gray-500 mt-1">
+        {{ formData.descricao.length }}/2000 caracteres (mínimo 20)
+      </p>
+    </div>
+
+    <!-- Informação sobre aprovação -->
+    <div class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+      <div class="flex items-start">
+        <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+        </svg>
+        <div class="flex-1">
+          <p class="text-sm text-gray-700">
+            <span class="font-semibold">Atenção:</span>
+            {{ isEditMode
+              ? 'As alterações serão submetidas para aprovação antes de serem publicadas no repositório.'
+              : 'Seu plano de aula será enviado para aprovação antes de ser publicado no repositório.' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botões de ação -->
+    <div class="flex flex-col sm:flex-row justify-end gap-3">
+      <button
+        type="button"
+        (click)="cancelar()"
+        [disabled]="isSubmitting"
+        class="px-6 py-2 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-400 disabled:bg-gray-400 disabled:cursor-not-allowed"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="submit"
+        [disabled]="isSubmitting"
+        class="px-6 py-2 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+      >
+        <svg *ngIf="!isSubmitting" class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </svg>
+        <span *ngIf="isSubmitting" class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+        {{ isSubmitting ? 'Salvando...' : (isEditMode ? 'Salvar Alterações' : 'Criar Plano de Aula') }}
+      </button>
+    </div>
+  </form>
+</div>

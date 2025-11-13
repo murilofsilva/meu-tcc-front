@@ -86,4 +86,22 @@ export class ReservaService {
   cancelar(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  /**
+   * Lista reservas futuras do professor autenticado
+   * Usado para vincular planejamentos
+   */
+  listarFuturas(): Observable<Reserva[]> {
+    return this.http.get<Reserva[]>(`${this.apiUrl}/futuras`);
+  }
+
+  /**
+   * Vincula ou substitui um planejamento em uma reserva existente
+   */
+  vincularPlanejamento(reservaId: number, planejamentoId: number): Observable<Reserva> {
+    return this.http.patch<Reserva>(
+      `${this.apiUrl}/${reservaId}/planejamento`,
+      { planejamentoId }
+    );
+  }
 }

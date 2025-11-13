@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ReservaService } from '../../services/reserva.service';
 import { LaboratorioService } from '../../services/laboratorio.service';
+import { PlanejamentoService } from '../../services/planejamento.service';
 import { NotificationService } from '../../core/notification.service';
 import { Reserva, CreateReservaRequest, UpdateReservaRequest, StatusReserva } from '../../models/reserva.models';
 import { Laboratorio } from '../../models/laboratorio.models';
@@ -19,11 +20,13 @@ import { Planejamento } from '../../models/planejamento.models';
 export class AgendamentosComponent implements OnInit {
   private reservaService = inject(ReservaService);
   private laboratorioService = inject(LaboratorioService);
+  private planejamentoService = inject(PlanejamentoService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
 
   reservas: Reserva[] = [];
   laboratorios: Laboratorio[] = [];
+  planejamentos: Planejamento[] = [];
   reservasConflitantes: Reserva[] = [];
   isLoading = false;
   isLoadingConflitos = false;
@@ -49,6 +52,7 @@ export class AgendamentosComponent implements OnInit {
   ngOnInit(): void {
     this.carregarReservas();
     this.carregarLaboratorios();
+    this.carregarPlanejamentos();
 
     // Verifica se há um planejamento selecionado vindo do repositório
     const navigation = this.router.getCurrentNavigation();
@@ -61,6 +65,18 @@ export class AgendamentosComponent implements OnInit {
       this.descricao = this.planejamentoSelecionado?.descricao || '';
       this.showForm = true;
     }
+  }
+
+  carregarPlanejamentos(): void {
+    // Lista planejamentos do professor (próprios + públicos de outros)
+    this.planejamentoService.listar().subscribe({
+      next: (planejamentos) => {
+        this.planejamentos = planejamentos;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar planejamentos:', error);
+      }
+    });
   }
 
   carregarReservas(): void {

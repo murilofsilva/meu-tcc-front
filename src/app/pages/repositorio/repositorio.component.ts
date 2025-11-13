@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PlanejamentoService } from '../../services/planejamento.service';
+import { ReservaService } from '../../services/reserva.service';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../core/notification.service';
 import {
@@ -10,6 +11,7 @@ import {
   StatusPlanejamento,
   PlanejamentoFiltros
 } from '../../models/planejamento.models';
+import { Reserva } from '../../models/reserva.models';
 
 @Component({
   selector: 'app-repositorio',
@@ -20,6 +22,7 @@ import {
 })
 export class RepositorioComponent implements OnInit {
   private planejamentoService = inject(PlanejamentoService);
+  private reservaService = inject(ReservaService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
@@ -133,14 +136,84 @@ export class RepositorioComponent implements OnInit {
   }
 
   importarParaReserva(planejamento: Planejamento): void {
+    this.planejamentoParaImportar = planejamento;
+    this.isImportModalOpen = true;
+    this.carregarReservasFuturas();
+  }
+
+  carregarReservasFuturas(): void {
+    this.isLoadingReservas = true;
+    this.reservaService.listarFuturas().subscribe({
+      next: (reservas) => {
+        this.reservasFuturas = reservas;
+        this.isLoadingReservas = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar reservas futuras:', error);
+        this.notificationService.show('Erro ao carregar reservas', 'error');
+        this.isLoadingReservas = false;
+      }
+    });
+  }
+
+  vincularPlanejamentoAReserva(reserva: Reserva): void {
+    if (!this.planejamentoParaImportar) return;
+
+    this.reservaService.vincularPlanejamento(reserva.id, this.planejamentoParaImportar.id).subscribe({
+      next: () => {
+        this.notificationService.show(
+          `Plano "${this.planejamentoParaImportar!.titulo}" vinculado à reserva "${reserva.titulo}" com sucesso!`,
+          'success'
+        );
+        this.fecharModalImportar();
+      },
+      error: (error) => {
+        console.error('Erro ao vincular planejamento:', error);
+        const mensagem = error?.error?.mensagem || 'Erro ao vincular planejamento à reserva';
+        this.notificationService.show(mensagem, 'error');
+      }
+    });
+  }
+
+  fecharModalImportar(): void {
+    this.isImportModalOpen = false;
+    this.planejamentoParaImportar = null;
+    this.reservasFuturas = [];
+  }
+
+  criarNovaReserva(): void {
+    if (!this.planejamentoParaImportar) return;
+
     // Navega para a página de agendamentos passando o planejamento selecionado
     this.router.navigate(['/agendamentos'], {
-      state: { planejamentoSelecionado: planejamento }
+      state: { planejamentoSelecionado: this.planejamentoParaImportar }
     });
     this.notificationService.show(
-      `Plano "${planejamento.titulo}" pronto para ser agendado.`,
+      `Criando nova reserva com o plano "${this.planejamentoParaImportar.titulo}"`,
       'success'
     );
+    this.fecharModalImportar();
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
+  formatTime(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  formatDateTime(dateString: string): string {
+    return `${this.formatDate(dateString)} ${this.formatTime(dateString)}`;
   }
 
   editarPlanejamento(planejamento: Planejamento): void {
@@ -150,6 +223,12 @@ export class RepositorioComponent implements OnInit {
   // Modal de detalhes
   isDetailsModalOpen = false;
   selectedPlanejamento: Planejamento | null = null;
+
+  // Modal de importar para reserva
+  isImportModalOpen = false;
+  reservasFuturas: Reserva[] = [];
+  isLoadingReservas = false;
+  planejamentoParaImportar: Planejamento | null = null;
 
   visualizarDetalhes(planejamento: Planejamento): void {
     this.selectedPlanejamento = planejamento;

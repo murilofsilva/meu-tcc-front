@@ -31,7 +31,8 @@ export class PlanejamentoFormComponent implements OnInit {
   formData = {
     titulo: '',
     area: '',
-    descricao: ''
+    descricao: '',
+    publico: false
   };
 
   // Opções para o select de área
@@ -68,7 +69,8 @@ export class PlanejamentoFormComponent implements OnInit {
         this.formData = {
           titulo: planejamento.titulo,
           area: planejamento.area,
-          descricao: planejamento.descricao
+          descricao: planejamento.descricao,
+          publico: planejamento.publico
         };
       },
       error: (error) => {
@@ -121,7 +123,8 @@ export class PlanejamentoFormComponent implements OnInit {
     const request: CreatePlanejamentoRequest = {
       titulo: this.formData.titulo.trim(),
       area: this.formData.area,
-      descricao: this.formData.descricao.trim()
+      descricao: this.formData.descricao.trim(),
+      publico: this.formData.publico
     };
 
     this.planejamentoService.criar(request).subscribe({
@@ -144,7 +147,8 @@ export class PlanejamentoFormComponent implements OnInit {
     const request: UpdatePlanejamentoRequest = {
       titulo: this.formData.titulo.trim(),
       area: this.formData.area,
-      descricao: this.formData.descricao.trim()
+      descricao: this.formData.descricao.trim(),
+      publico: this.formData.publico
     };
 
     this.planejamentoService.atualizar(this.planejamentoId, request).subscribe({
@@ -185,7 +189,8 @@ export class PlanejamentoFormComponent implements OnInit {
     return (
       this.formData.titulo !== this.planejamento.titulo ||
       this.formData.area !== this.planejamento.area ||
-      this.formData.descricao !== this.planejamento.descricao
+      this.formData.descricao !== this.planejamento.descricao ||
+      this.formData.publico !== this.planejamento.publico
     );
   }
 }

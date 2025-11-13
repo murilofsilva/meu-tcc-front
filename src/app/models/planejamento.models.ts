@@ -24,6 +24,7 @@ export interface Planejamento {
   descricao: string;
   status: StatusPlanejamento;
   versao: number;
+  publico: boolean;
   criadoEm: string;
 }
 
@@ -31,12 +32,14 @@ export interface CreatePlanejamentoRequest {
   titulo: string;
   area: string;
   descricao: string;
+  publico: boolean;
 }
 
 export interface UpdatePlanejamentoRequest {
   titulo: string;
   area: string;
   descricao: string;
+  publico: boolean;
 }
 
 export interface PlanejamentoFiltros {

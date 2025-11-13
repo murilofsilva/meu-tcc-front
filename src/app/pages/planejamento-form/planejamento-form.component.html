@@ -105,6 +105,27 @@
       </p>
     </div>
 
+    <!-- Checkbox Público -->
+    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div class="flex items-start">
+        <input
+          type="checkbox"
+          id="publico"
+          [(ngModel)]="formData.publico"
+          name="publico"
+          class="mt-1 h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+        />
+        <div class="ml-3 flex-1">
+          <label for="publico" class="font-semibold text-gray-800 cursor-pointer">
+            Tornar público no repositório
+          </label>
+          <p class="text-sm text-gray-600 mt-1">
+            Ao marcar esta opção, o planejamento ficará visível para outros professores após aprovação do diretor. Caso contrário, apenas você e o diretor poderão visualizá-lo.
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- Informação sobre aprovação -->
     <div class="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
       <div class="flex items-start">

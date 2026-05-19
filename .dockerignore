@@ -1,0 +1,14 @@
+.git
+.gitignore
+.vscode
+.idea
+.claude
+.angular
+node_modules
+dist
+coverage
+*.log
+Dockerfile
+.dockerignore
+README.md
+C:

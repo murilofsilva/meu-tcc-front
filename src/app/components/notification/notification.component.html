@@ -1,10 +1,13 @@
 @if (notification(); as notif) {
-  <div 
+  <div
+    [attr.role]="notif.type === 'error' ? 'alert' : 'status'"
+    [attr.aria-live]="notif.type === 'error' ? 'assertive' : 'polite'"
+    aria-atomic="true"
     class="fixed top-5 right-5 py-2 px-4 rounded-lg shadow-lg flex items-center z-50 animate-slide-in-right"
     [ngClass]="{
-      'bg-green-500 text-white': notif.type === 'success',
-      'bg-red-500 text-white': notif.type === 'error',
-      'bg-blue-500 text-white': notif.type === 'info'
+      'bg-green-600 text-white': notif.type === 'success',
+      'bg-red-600 text-white': notif.type === 'error',
+      'bg-blue-600 text-white': notif.type === 'info'
     }"
   >
     @switch (notif.type) {

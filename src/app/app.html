@@ -1,9 +1,17 @@
 <div class="bg-gray-100 min-h-screen font-sans text-gray-800">
+  <a
+    href="#conteudo-principal"
+    class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:bg-blue-700 focus:text-white focus:px-3 focus:py-2 focus:rounded"
+  >
+    Pular para o conteúdo principal
+  </a>
+
   <app-notification></app-notification>
-  
+
   @if (user()) {
+    <app-evaluation-banner></app-evaluation-banner>
     <app-header></app-header>
-    <main class="p-4 sm:p-6 md:p-8">
+    <main id="conteudo-principal" tabindex="-1" class="p-4 sm:p-6 md:p-8">
       <router-outlet />
     </main>
   } @else {

@@ -53,6 +53,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'disciplinas',
+    loadComponent: () => import('./pages/disciplinas/disciplinas.component').then(m => m.DisciplinasComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: '',
     redirectTo: '/login',
     pathMatch: 'full'

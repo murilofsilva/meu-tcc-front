@@ -14,6 +14,23 @@
   <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
     <h2 class="text-3xl font-bold">Repositório de Aulas</h2>
 
+    <!-- Busca por nome (acima dos filtros) -->
+    <label class="sr-only" for="busca-titulo">Buscar por nome do plano de aula</label>
+    <div class="relative w-full md:w-80">
+      <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+      </svg>
+      <input
+        id="busca-titulo"
+        type="search"
+        [ngModel]="buscaTitulo"
+        (ngModelChange)="onBuscaTituloChange($event)"
+        placeholder="Buscar por nome..."
+        aria-label="Buscar planos de aula por nome"
+        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      />
+    </div>
+
     <div class="flex flex-wrap gap-3">
       <button
         (click)="novoPlanejamento()"
@@ -60,14 +77,15 @@
 
       <!-- Filtro por área/disciplina -->
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Área/Disciplina</label>
+        <label for="filtro-area" class="block text-sm font-medium text-gray-700 mb-1">Área/Disciplina</label>
         <select
+          id="filtro-area"
           [(ngModel)]="filtros.area"
           (ngModelChange)="aplicarFiltros()"
           class="w-full p-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="">Todas as Áreas</option>
-          <option *ngFor="let area of areas" [value]="area">{{ area }}</option>
+          <option *ngFor="let area of areas" [value]="area.nome">{{ area.nome }}</option>
         </select>
       </div>
 
@@ -99,6 +117,35 @@
         </select>
       </div>
     </div>
+
+    <!-- Filtros booleanos: competências e acessibilidade -->
+    <fieldset class="mb-4">
+      <legend class="block text-sm font-medium text-gray-700 mb-2">Outros filtros</legend>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            [(ngModel)]="filtros.somenteComCompetenciasComputacao"
+            (ngModelChange)="aplicarFiltros()"
+            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <span class="ml-2 text-sm text-gray-700">
+            Somente aulas que mobilizam competências de computação
+          </span>
+        </label>
+        <label class="inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            [(ngModel)]="filtros.somenteComRecursosAcessibilidade"
+            (ngModelChange)="aplicarFiltros()"
+            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <span class="ml-2 text-sm text-gray-700">
+            Somente aulas com recursos de acessibilidade
+          </span>
+        </label>
+      </div>
+    </fieldset>
 
     <!-- Botão limpar filtros -->
     <div class="flex justify-end">
@@ -143,6 +190,25 @@
             | Por: {{ planejamento.author.nome }}
             <span *ngIf="podeEditar(planejamento)" class="text-blue-600 font-semibold">(Você)</span>
           </p>
+
+          <!-- Badges de atributos especiais -->
+          <div class="flex flex-wrap gap-2 mb-2">
+            <span *ngIf="planejamento.mobilizaCompetenciasComputacao"
+              class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium">
+              💻 Competências de computação
+            </span>
+            <span *ngIf="planejamento.utilizaRecursosAcessibilidade"
+              class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800 font-medium">
+              ♿ Acessibilidade
+            </span>
+            <button *ngIf="planejamento.codigo"
+              type="button"
+              (click)="copiarCodigo(planejamento.codigo)"
+              class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 font-mono hover:bg-gray-200 transition-colors"
+              [attr.aria-label]="'Copiar código ' + planejamento.codigo">
+              # {{ planejamento.codigo }}
+            </button>
+          </div>
 
           <p class="text-sm text-gray-700 mt-2 line-clamp-2">
             {{ planejamento.descricao }}
@@ -236,10 +302,40 @@
           </span>
         </div>
 
+        <!-- Código -->
+        <div *ngIf="selectedPlanejamento.codigo">
+          <label class="text-sm font-semibold text-gray-700 block mb-1">Código compartilhável</label>
+          <div class="flex items-center gap-2 bg-gray-50 p-3 rounded-lg">
+            <span class="text-gray-800 font-mono text-lg">{{ selectedPlanejamento.codigo }}</span>
+            <button type="button" (click)="copiarCodigo(selectedPlanejamento.codigo)"
+              class="text-blue-600 hover:text-blue-800 text-sm underline"
+              aria-label="Copiar código">Copiar</button>
+          </div>
+        </div>
+
         <!-- Área -->
         <div>
           <label class="text-sm font-semibold text-gray-700 block mb-1">Área/Disciplina</label>
           <p class="text-gray-800 bg-gray-50 p-3 rounded-lg">{{ selectedPlanejamento.area }}</p>
+        </div>
+
+        <!-- Competências de computação -->
+        <div *ngIf="selectedPlanejamento.mobilizaCompetenciasComputacao">
+          <label class="text-sm font-semibold text-gray-700 block mb-1">Competências de computação mobilizadas</label>
+          <div class="bg-indigo-50 p-3 rounded-lg flex flex-wrap gap-2">
+            <span *ngFor="let comp of selectedPlanejamento.competenciasComputacao"
+              class="text-xs px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 font-medium">
+              {{ labelCompetencia(comp) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Acessibilidade -->
+        <div *ngIf="selectedPlanejamento.utilizaRecursosAcessibilidade">
+          <label class="text-sm font-semibold text-gray-700 block mb-1">Recursos de acessibilidade</label>
+          <p class="text-gray-800 bg-purple-50 p-3 rounded-lg whitespace-pre-wrap">
+            {{ selectedPlanejamento.descricaoRecursosAcessibilidade }}
+          </p>
         </div>
 
         <!-- Descrição -->

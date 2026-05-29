@@ -2,14 +2,19 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { PlanejamentoService } from '../../services/planejamento.service';
 import { ReservaService } from '../../services/reserva.service';
 import { AuthService } from '../../services/auth.service';
+import { AreaConhecimentoService } from '../../services/area-conhecimento.service';
 import { NotificationService } from '../../core/notification.service';
 import {
+  AreaConhecimento,
+  COMPETENCIAS_COMPUTACAO_LABELS,
   Planejamento,
-  StatusPlanejamento,
-  PlanejamentoFiltros
+  PlanejamentoFiltros,
+  StatusPlanejamento
 } from '../../models/planejamento.models';
 import { Reserva } from '../../models/reserva.models';
 
@@ -24,6 +29,7 @@ export class RepositorioComponent implements OnInit {
   private planejamentoService = inject(PlanejamentoService);
   private reservaService = inject(ReservaService);
   private authService = inject(AuthService);
+  private areaService = inject(AreaConhecimentoService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
 
@@ -31,27 +37,19 @@ export class RepositorioComponent implements OnInit {
   planejamentosFiltrados: Planejamento[] = [];
   expandedFilters = true;
 
-  // Filtros
   filtros: PlanejamentoFiltros = {
     palavraChave: '',
     area: '',
     authorId: undefined,
-    status: undefined
+    status: undefined,
+    somenteComCompetenciasComputacao: false,
+    somenteComRecursosAcessibilidade: false
   };
 
-  // Opções para os filtros
-  areas: string[] = [
-    'Matemática',
-    'Português',
-    'Ciências',
-    'História',
-    'Geografia',
-    'Computação',
-    'Ética',
-    'Arte',
-    'Educação Física',
-    'Inglês'
-  ];
+  buscaTitulo = '';
+  private buscaTitulo$ = new Subject<string>();
+
+  areas: AreaConhecimento[] = [];
 
   statusOptions = [
     { value: '', label: 'Todos os Status' },
@@ -61,13 +59,27 @@ export class RepositorioComponent implements OnInit {
     { value: StatusPlanejamento.REPROVADO, label: 'Reprovado' }
   ];
 
-  filtroAutor = 'todos'; // 'todos', 'meus', ou id específico
+  filtroAutor = 'todos';
 
   user = this.authService.user;
   StatusPlanejamento = StatusPlanejamento;
 
+  labelCompetencia(codigo: string): string {
+    return (COMPETENCIAS_COMPUTACAO_LABELS as Record<string, string>)[codigo] || codigo;
+  }
+
   ngOnInit(): void {
     this.carregarPlanejamentos();
+    this.carregarAreas();
+
+    this.buscaTitulo$.pipe(debounceTime(250)).subscribe(() => this.aplicarFiltros());
+  }
+
+  carregarAreas(): void {
+    this.areaService.listar(false).subscribe({
+      next: (areas) => this.areas = areas,
+      error: () => this.notificationService.show('Erro ao carregar disciplinas', 'error')
+    });
   }
 
   carregarPlanejamentos(): void {
@@ -83,10 +95,19 @@ export class RepositorioComponent implements OnInit {
     });
   }
 
+  onBuscaTituloChange(valor: string): void {
+    this.buscaTitulo = valor;
+    this.buscaTitulo$.next(valor);
+  }
+
   aplicarFiltros(): void {
     let resultado = [...this.planejamentos];
 
-    // Filtro por palavra-chave
+    const tituloBusca = (this.buscaTitulo || '').trim().toLowerCase();
+    if (tituloBusca) {
+      resultado = resultado.filter(p => p.titulo.toLowerCase().includes(tituloBusca));
+    }
+
     if (this.filtros.palavraChave && this.filtros.palavraChave.trim()) {
       const palavraChave = this.filtros.palavraChave.toLowerCase().trim();
       resultado = resultado.filter(p =>
@@ -96,20 +117,25 @@ export class RepositorioComponent implements OnInit {
       );
     }
 
-    // Filtro por área
     if (this.filtros.area) {
       resultado = resultado.filter(p => p.area === this.filtros.area);
     }
 
-    // Filtro por autor
     if (this.filtroAutor === 'meus') {
       const userId = this.user()?.id;
       resultado = resultado.filter(p => p.author.id === userId);
     }
 
-    // Filtro por status
     if (this.filtros.status) {
       resultado = resultado.filter(p => p.status === this.filtros.status);
+    }
+
+    if (this.filtros.somenteComCompetenciasComputacao) {
+      resultado = resultado.filter(p => p.mobilizaCompetenciasComputacao);
+    }
+
+    if (this.filtros.somenteComRecursosAcessibilidade) {
+      resultado = resultado.filter(p => p.utilizaRecursosAcessibilidade);
     }
 
     this.planejamentosFiltrados = resultado;
@@ -120,9 +146,12 @@ export class RepositorioComponent implements OnInit {
       palavraChave: '',
       area: '',
       authorId: undefined,
-      status: undefined
+      status: undefined,
+      somenteComCompetenciasComputacao: false,
+      somenteComRecursosAcessibilidade: false
     };
     this.filtroAutor = 'todos';
+    this.buscaTitulo = '';
     this.aplicarFiltros();
   }
 
@@ -183,8 +212,6 @@ export class RepositorioComponent implements OnInit {
 
   criarNovaReserva(): void {
     if (!this.planejamentoParaImportar) return;
-
-    // Navega para a página de agendamentos passando o planejamento selecionado
     this.router.navigate(['/agendamentos'], {
       state: { planejamentoSelecionado: this.planejamentoParaImportar }
     });
@@ -196,19 +223,14 @@ export class RepositorioComponent implements OnInit {
   }
 
   formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
     });
   }
 
   formatTime(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleTimeString('pt-BR', {
+      hour: '2-digit', minute: '2-digit'
     });
   }
 
@@ -216,15 +238,21 @@ export class RepositorioComponent implements OnInit {
     return `${this.formatDate(dateString)} ${this.formatTime(dateString)}`;
   }
 
+  copiarCodigo(codigo: string | null): void {
+    if (!codigo) return;
+    navigator.clipboard.writeText(codigo).then(
+      () => this.notificationService.show(`Código ${codigo} copiado!`, 'success'),
+      () => this.notificationService.show('Não foi possível copiar o código', 'error')
+    );
+  }
+
   editarPlanejamento(planejamento: Planejamento): void {
     this.router.navigate(['/planejamento-form', planejamento.id]);
   }
 
-  // Modal de detalhes
   isDetailsModalOpen = false;
   selectedPlanejamento: Planejamento | null = null;
 
-  // Modal de importar para reserva
   isImportModalOpen = false;
   reservasFuturas: Reserva[] = [];
   isLoadingReservas = false;
@@ -250,31 +278,21 @@ export class RepositorioComponent implements OnInit {
 
   getStatusClass(status: StatusPlanejamento): string {
     switch (status) {
-      case StatusPlanejamento.PUBLICADO:
-        return 'bg-green-100 text-green-800';
-      case StatusPlanejamento.PENDENTE:
-        return 'bg-yellow-100 text-yellow-800';
-      case StatusPlanejamento.AGUARDANDO_AJUSTES:
-        return 'bg-orange-100 text-orange-800';
-      case StatusPlanejamento.REPROVADO:
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case StatusPlanejamento.PUBLICADO: return 'bg-green-100 text-green-800';
+      case StatusPlanejamento.PENDENTE: return 'bg-yellow-100 text-yellow-800';
+      case StatusPlanejamento.AGUARDANDO_AJUSTES: return 'bg-orange-100 text-orange-800';
+      case StatusPlanejamento.REPROVADO: return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   }
 
   getStatusLabel(status: StatusPlanejamento): string {
     switch (status) {
-      case StatusPlanejamento.PUBLICADO:
-        return 'Publicado';
-      case StatusPlanejamento.PENDENTE:
-        return 'Pendente';
-      case StatusPlanejamento.AGUARDANDO_AJUSTES:
-        return 'Aguardando Ajustes';
-      case StatusPlanejamento.REPROVADO:
-        return 'Reprovado';
-      default:
-        return status;
+      case StatusPlanejamento.PUBLICADO: return 'Publicado';
+      case StatusPlanejamento.PENDENTE: return 'Pendente';
+      case StatusPlanejamento.AGUARDANDO_AJUSTES: return 'Aguardando Ajustes';
+      case StatusPlanejamento.REPROVADO: return 'Reprovado';
+      default: return status;
     }
   }
 

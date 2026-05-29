@@ -3,12 +3,27 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PlanejamentoService } from '../../services/planejamento.service';
+import { AreaConhecimentoService } from '../../services/area-conhecimento.service';
 import { NotificationService } from '../../core/notification.service';
 import {
-  Planejamento,
+  AreaConhecimento,
+  CompetenciaComputacao,
+  COMPETENCIAS_COMPUTACAO_LABELS,
   CreatePlanejamentoRequest,
+  Planejamento,
   UpdatePlanejamentoRequest
 } from '../../models/planejamento.models';
+
+interface FormData {
+  titulo: string;
+  areaConhecimentoId: number | null;
+  descricao: string;
+  publico: boolean;
+  mobilizaCompetenciasComputacao: boolean;
+  competenciasComputacao: Record<CompetenciaComputacao, boolean>;
+  utilizaRecursosAcessibilidade: boolean;
+  descricaoRecursosAcessibilidade: string;
+}
 
 @Component({
   selector: 'app-planejamento-form',
@@ -19,6 +34,7 @@ import {
 })
 export class PlanejamentoFormComponent implements OnInit {
   private planejamentoService = inject(PlanejamentoService);
+  private areaService = inject(AreaConhecimentoService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private notificationService = inject(NotificationService);
@@ -27,37 +43,53 @@ export class PlanejamentoFormComponent implements OnInit {
   planejamentoId?: number;
   planejamento?: Planejamento;
 
-  // Dados do formulário
-  formData = {
-    titulo: '',
-    area: '',
-    descricao: '',
-    publico: false
-  };
+  areas: AreaConhecimento[] = [];
 
-  // Opções para o select de área
-  areas: string[] = [
-    'Matemática',
-    'Português',
-    'Ciências',
-    'História',
-    'Geografia',
-    'Computação',
-    'Ética',
-    'Arte',
-    'Educação Física',
-    'Inglês'
+  CompetenciaComputacao = CompetenciaComputacao;
+  competenciaOpcoes: CompetenciaComputacao[] = [
+    CompetenciaComputacao.PENSAMENTO_COMPUTACIONAL,
+    CompetenciaComputacao.CULTURA_DIGITAL,
+    CompetenciaComputacao.MUNDO_DIGITAL
   ];
+  competenciaLabel = COMPETENCIAS_COMPUTACAO_LABELS;
+
+  formData: FormData = this.estadoInicial();
 
   isSubmitting = false;
 
   ngOnInit(): void {
+    this.carregarAreas();
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode = true;
       this.planejamentoId = parseInt(id, 10);
       this.carregarPlanejamento();
     }
+  }
+
+  private estadoInicial(): FormData {
+    return {
+      titulo: '',
+      areaConhecimentoId: null,
+      descricao: '',
+      publico: false,
+      mobilizaCompetenciasComputacao: false,
+      competenciasComputacao: {
+        [CompetenciaComputacao.PENSAMENTO_COMPUTACIONAL]: false,
+        [CompetenciaComputacao.CULTURA_DIGITAL]: false,
+        [CompetenciaComputacao.MUNDO_DIGITAL]: false
+      },
+      utilizaRecursosAcessibilidade: false,
+      descricaoRecursosAcessibilidade: ''
+    };
+  }
+
+  carregarAreas(): void {
+    this.areaService.listar(true).subscribe({
+      next: (areas) => this.areas = areas,
+      error: () => this.notificationService.show('Erro ao carregar disciplinas', 'error')
+    });
   }
 
   carregarPlanejamento(): void {
@@ -68,9 +100,17 @@ export class PlanejamentoFormComponent implements OnInit {
         this.planejamento = planejamento;
         this.formData = {
           titulo: planejamento.titulo,
-          area: planejamento.area,
+          areaConhecimentoId: planejamento.areaConhecimento?.id ?? null,
           descricao: planejamento.descricao,
-          publico: planejamento.publico
+          publico: planejamento.publico,
+          mobilizaCompetenciasComputacao: planejamento.mobilizaCompetenciasComputacao,
+          competenciasComputacao: {
+            [CompetenciaComputacao.PENSAMENTO_COMPUTACIONAL]: planejamento.competenciasComputacao.includes(CompetenciaComputacao.PENSAMENTO_COMPUTACIONAL),
+            [CompetenciaComputacao.CULTURA_DIGITAL]: planejamento.competenciasComputacao.includes(CompetenciaComputacao.CULTURA_DIGITAL),
+            [CompetenciaComputacao.MUNDO_DIGITAL]: planejamento.competenciasComputacao.includes(CompetenciaComputacao.MUNDO_DIGITAL)
+          },
+          utilizaRecursosAcessibilidade: planejamento.utilizaRecursosAcessibilidade,
+          descricaoRecursosAcessibilidade: planejamento.descricaoRecursosAcessibilidade ?? ''
         };
       },
       error: (error) => {
@@ -81,11 +121,24 @@ export class PlanejamentoFormComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
-    if (!this.validarFormulario()) {
-      return;
+  onMobilizaCompetenciasChange(): void {
+    if (!this.formData.mobilizaCompetenciasComputacao) {
+      this.competenciaOpcoes.forEach(c => this.formData.competenciasComputacao[c] = false);
     }
+  }
 
+  onAcessibilidadeChange(): void {
+    if (!this.formData.utilizaRecursosAcessibilidade) {
+      this.formData.descricaoRecursosAcessibilidade = '';
+    }
+  }
+
+  competenciasSelecionadas(): CompetenciaComputacao[] {
+    return this.competenciaOpcoes.filter(c => this.formData.competenciasComputacao[c]);
+  }
+
+  onSubmit(): void {
+    if (!this.validarFormulario()) return;
     this.isSubmitting = true;
 
     if (this.isEditMode && this.planejamentoId) {
@@ -101,40 +154,64 @@ export class PlanejamentoFormComponent implements OnInit {
       return false;
     }
 
-    if (!this.formData.area) {
-      this.notificationService.show('Por favor, selecione uma área/disciplina', 'error');
+    if (!this.formData.areaConhecimentoId) {
+      this.notificationService.show('Por favor, selecione uma disciplina/área', 'error');
       return false;
     }
 
-    if (!this.formData.descricao.trim()) {
-      this.notificationService.show('Por favor, informe a descrição do plano de aula', 'error');
-      return false;
-    }
-
-    if (this.formData.descricao.trim().length < 20) {
+    if (!this.formData.descricao.trim() || this.formData.descricao.trim().length < 20) {
       this.notificationService.show('A descrição deve ter pelo menos 20 caracteres', 'error');
       return false;
+    }
+
+    if (this.formData.mobilizaCompetenciasComputacao && this.competenciasSelecionadas().length === 0) {
+      this.notificationService.show(
+        'Selecione ao menos uma competência de computação',
+        'error'
+      );
+      return false;
+    }
+
+    if (this.formData.utilizaRecursosAcessibilidade) {
+      const desc = this.formData.descricaoRecursosAcessibilidade.trim();
+      if (desc.length < 10) {
+        this.notificationService.show(
+          'Descreva os recursos de acessibilidade utilizados (mínimo 10 caracteres)',
+          'error'
+        );
+        return false;
+      }
     }
 
     return true;
   }
 
-  criarPlanejamento(): void {
-    const request: CreatePlanejamentoRequest = {
+  private montarRequest(): CreatePlanejamentoRequest {
+    return {
       titulo: this.formData.titulo.trim(),
-      area: this.formData.area,
+      areaConhecimentoId: this.formData.areaConhecimentoId!,
       descricao: this.formData.descricao.trim(),
-      publico: this.formData.publico
+      publico: this.formData.publico,
+      mobilizaCompetenciasComputacao: this.formData.mobilizaCompetenciasComputacao,
+      competenciasComputacao: this.formData.mobilizaCompetenciasComputacao
+        ? this.competenciasSelecionadas()
+        : [],
+      utilizaRecursosAcessibilidade: this.formData.utilizaRecursosAcessibilidade,
+      descricaoRecursosAcessibilidade: this.formData.utilizaRecursosAcessibilidade
+        ? this.formData.descricaoRecursosAcessibilidade.trim()
+        : null
     };
+  }
 
-    this.planejamentoService.criar(request).subscribe({
-      next: (planejamento) => {
+  criarPlanejamento(): void {
+    this.planejamentoService.criar(this.montarRequest()).subscribe({
+      next: () => {
         this.notificationService.show('Plano de aula criado com sucesso!', 'success');
         this.router.navigate(['/repositorio']);
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMessage = error?.error?.message || 'Erro ao criar plano de aula';
+        const errorMessage = error?.error?.message || error?.error?.mensagem || 'Erro ao criar plano de aula';
         this.notificationService.show(errorMessage, 'error');
         console.error('Erro ao criar planejamento:', error);
       }
@@ -143,26 +220,29 @@ export class PlanejamentoFormComponent implements OnInit {
 
   atualizarPlanejamento(): void {
     if (!this.planejamentoId) return;
-
-    const request: UpdatePlanejamentoRequest = {
-      titulo: this.formData.titulo.trim(),
-      area: this.formData.area,
-      descricao: this.formData.descricao.trim(),
-      publico: this.formData.publico
-    };
+    const request: UpdatePlanejamentoRequest = this.montarRequest();
 
     this.planejamentoService.atualizar(this.planejamentoId, request).subscribe({
-      next: (planejamento) => {
+      next: () => {
         this.notificationService.show('Plano de aula atualizado com sucesso!', 'success');
         this.router.navigate(['/repositorio']);
       },
       error: (error) => {
         this.isSubmitting = false;
-        const errorMessage = error?.error?.message || 'Erro ao atualizar plano de aula';
+        const errorMessage = error?.error?.message || error?.error?.mensagem || 'Erro ao atualizar plano de aula';
         this.notificationService.show(errorMessage, 'error');
         console.error('Erro ao atualizar planejamento:', error);
       }
     });
+  }
+
+  copiarCodigo(): void {
+    const codigo = this.planejamento?.codigo;
+    if (!codigo) return;
+    navigator.clipboard.writeText(codigo).then(
+      () => this.notificationService.show(`Código ${codigo} copiado!`, 'success'),
+      () => this.notificationService.show('Não foi possível copiar', 'error')
+    );
   }
 
   voltarRepositorio(): void {
@@ -181,16 +261,16 @@ export class PlanejamentoFormComponent implements OnInit {
 
   formularioAlterado(): boolean {
     if (!this.isEditMode) {
-      return !!(this.formData.titulo || this.formData.area || this.formData.descricao);
+      return !!(this.formData.titulo || this.formData.areaConhecimentoId || this.formData.descricao);
     }
-
     if (!this.planejamento) return false;
-
     return (
       this.formData.titulo !== this.planejamento.titulo ||
-      this.formData.area !== this.planejamento.area ||
+      this.formData.areaConhecimentoId !== (this.planejamento.areaConhecimento?.id ?? null) ||
       this.formData.descricao !== this.planejamento.descricao ||
-      this.formData.publico !== this.planejamento.publico
+      this.formData.publico !== this.planejamento.publico ||
+      this.formData.mobilizaCompetenciasComputacao !== this.planejamento.mobilizaCompetenciasComputacao ||
+      this.formData.utilizaRecursosAcessibilidade !== this.planejamento.utilizaRecursosAcessibilidade
     );
   }
 }

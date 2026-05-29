@@ -41,6 +41,7 @@ export class DashboardComponent {
         { title: 'Aprovar Reservas', icon: 'clipboard-list', route: '/aprovacoes' },
         { title: 'Aprovar Planejamentos', icon: 'clipboard-check', route: '/aprovacoes-planejamentos' },
         { title: 'Gerenciar Salas', icon: 'building', route: '/salas' },
+        { title: 'Disciplinas / Áreas', icon: 'book', route: '/disciplinas' },
         { title: 'Cadastrar Professor', icon: 'user-plus', route: '/cadastro-professor' },
         { title: 'Consultar Repositório', icon: 'search', route: '/repositorio' },
         { title: 'Gerar Relatórios', icon: 'document', action: 'reports' }

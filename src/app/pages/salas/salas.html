@@ -60,26 +60,36 @@
               <span><strong>Capacidade:</strong> {{ sala.capacidade }} pessoas</span>
             </div>
             <div class="flex items-center text-gray-700">
-              <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M20,18c1.1,0,2-0.9,2-2V6c0-1.1-0.9-2-2-2H4C2.9,4,2,4.9,2,6v10c0,1.1,0.9,2,2,2H0v2h24v-2H20z M4,6h16v10H4V6z"/>
               </svg>
-              <span><strong>Equipamentos:</strong> {{ sala.qtdEquipamentos }}</span>
+              <span><strong>Computadores/notebooks:</strong> {{ sala.quantidadeComputadores }}</span>
+            </div>
+            <div *ngIf="sala.descricao" class="text-sm text-gray-600 whitespace-pre-wrap">
+              <strong>Outros equipamentos:</strong> {{ sala.descricao }}
             </div>
           </div>
 
           <!-- Ações -->
-          <div class="flex gap-2 pt-4 border-t border-gray-200">
+          <div class="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
             <button
               (click)="abrirFormularioEdicao(sala)"
-              class="flex-1 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-semibold"
+              class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-semibold"
               title="Editar sala"
             >
               Editar
             </button>
             <button
+              (click)="abrirDisponibilidades(sala)"
+              class="px-3 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors text-sm font-semibold"
+              title="Definir janelas de funcionamento e bloqueios"
+            >
+              Disponibilidade
+            </button>
+            <button
               (click)="alterarStatus(sala)"
               [class]="sala.status ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-500 hover:bg-green-600'"
-              class="flex-1 px-3 py-2 text-white rounded-lg transition-colors text-sm font-semibold"
+              class="px-3 py-2 text-white rounded-lg transition-colors text-sm font-semibold"
               [title]="sala.status ? 'Desativar sala' : 'Ativar sala'"
             >
               {{ sala.status ? 'Desativar' : 'Ativar' }}
@@ -168,19 +178,35 @@
           </div>
 
           <div>
-            <label for="qtdEquipamentos" class="block text-sm font-medium text-gray-700 mb-1">
-              Equipamentos
+            <label for="quantidadeComputadores" class="block text-sm font-medium text-gray-700 mb-1">
+              Quantidade de computadores/notebooks
             </label>
             <input
               type="number"
-              id="qtdEquipamentos"
-              [(ngModel)]="qtdEquipamentos"
-              name="qtdEquipamentos"
+              id="quantidadeComputadores"
+              [(ngModel)]="quantidadeComputadores"
+              name="quantidadeComputadores"
               min="0"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Ex: 20"
             />
           </div>
+        </div>
+
+        <!-- Descrição livre de equipamentos -->
+        <div>
+          <label for="descricao" class="block text-sm font-medium text-gray-700 mb-1">
+            Outros equipamentos/materiais
+          </label>
+          <textarea
+            id="descricao"
+            [(ngModel)]="descricao"
+            name="descricao"
+            rows="3"
+            maxlength="2000"
+            placeholder="Ex: 1 impressora 3D, 2 kits de robótica Arduino, 1 projetor"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          ></textarea>
         </div>
 
         <!-- Botões -->
@@ -201,6 +227,126 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Painel de Disponibilidades -->
+  <div
+    *ngIf="showDisponibilidadesPanel && salaDisponibilidades"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="disp-titulo"
+    (click)="fecharDisponibilidades()"
+  >
+    <div
+      class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 id="disp-titulo" class="text-2xl font-bold text-gray-800">
+            Disponibilidade — {{ salaDisponibilidades.nome }}
+          </h2>
+          <p class="text-sm text-gray-600 mt-1">
+            Defina janelas semanais de funcionamento e bloqueios específicos.
+          </p>
+        </div>
+        <button (click)="fecharDisponibilidades()" class="text-gray-500 hover:text-gray-700" aria-label="Fechar painel">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Janelas semanais -->
+      <section aria-labelledby="janelas-titulo" class="mb-6">
+        <h3 id="janelas-titulo" class="text-lg font-semibold text-gray-800 mb-2">Janelas semanais</h3>
+        <p class="text-xs text-gray-600 mb-3">
+          Sem janelas cadastradas, o laboratório é considerado com horário irrestrito.
+        </p>
+
+        <div *ngIf="janelas.length === 0" class="text-sm text-gray-500 italic mb-3">
+          Nenhuma janela cadastrada.
+        </div>
+
+        <div *ngFor="let j of janelas; let i = index" class="flex flex-wrap items-end gap-2 mb-2">
+          <div>
+            <label [for]="'dia-' + i" class="block text-xs text-gray-600">Dia</label>
+            <select [id]="'dia-' + i" [(ngModel)]="j.diaSemana" [name]="'dia-' + i"
+              class="p-2 border border-gray-300 rounded-lg">
+              <option *ngFor="let d of diasSemanaOrdem" [ngValue]="d">{{ diasSemanaLabel[d] }}</option>
+            </select>
+          </div>
+          <div>
+            <label [for]="'ini-' + i" class="block text-xs text-gray-600">Início</label>
+            <input [id]="'ini-' + i" type="time" [(ngModel)]="j.horaInicio" [name]="'ini-' + i"
+              class="p-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label [for]="'fim-' + i" class="block text-xs text-gray-600">Fim</label>
+            <input [id]="'fim-' + i" type="time" [(ngModel)]="j.horaFim" [name]="'fim-' + i"
+              class="p-2 border border-gray-300 rounded-lg" />
+          </div>
+          <button type="button" (click)="removerJanela(i)"
+            class="px-3 py-2 text-sm text-red-600 hover:underline" aria-label="Remover janela">
+            Remover
+          </button>
+        </div>
+
+        <div class="flex gap-2 mt-3">
+          <button type="button" (click)="adicionarJanela()"
+            class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-semibold">
+            + Adicionar janela
+          </button>
+          <button type="button" (click)="salvarJanelas()" [disabled]="isSavingDisp"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold disabled:bg-gray-400">
+            {{ isSavingDisp ? 'Salvando...' : 'Salvar janelas' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Bloqueios -->
+      <section aria-labelledby="bloq-titulo">
+        <h3 id="bloq-titulo" class="text-lg font-semibold text-gray-800 mb-2">Bloqueios (períodos indisponíveis)</h3>
+        <p class="text-xs text-gray-600 mb-3">
+          Use para formações, manutenções ou outros eventos que impeçam reservas.
+        </p>
+
+        <div *ngFor="let b of indisponibilidades" class="flex items-center justify-between bg-gray-50 p-2 rounded mb-2">
+          <div class="text-sm">
+            <p class="font-semibold text-gray-800">{{ b.motivo }}</p>
+            <p class="text-gray-600 text-xs">
+              De {{ formatBloqueio(b.inicio) }} até {{ formatBloqueio(b.fim) }}
+            </p>
+          </div>
+          <button type="button" (click)="removerBloqueio(b)"
+            class="text-sm text-red-600 hover:underline">Remover</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end mt-3">
+          <div>
+            <label for="bloq-inicio" class="block text-xs text-gray-600">Início</label>
+            <input id="bloq-inicio" type="datetime-local" [(ngModel)]="novoBloqueioInicio" name="bloqInicio"
+              class="w-full p-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label for="bloq-fim" class="block text-xs text-gray-600">Fim</label>
+            <input id="bloq-fim" type="datetime-local" [(ngModel)]="novoBloqueioFim" name="bloqFim"
+              class="w-full p-2 border border-gray-300 rounded-lg" />
+          </div>
+          <div>
+            <label for="bloq-motivo" class="block text-xs text-gray-600">Motivo</label>
+            <input id="bloq-motivo" type="text" [(ngModel)]="novoBloqueioMotivo" name="bloqMotivo" maxlength="500"
+              placeholder="Ex: Manutenção"
+              class="w-full p-2 border border-gray-300 rounded-lg" />
+          </div>
+        </div>
+        <button type="button" (click)="adicionarBloqueio()"
+          class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold">
+          + Adicionar bloqueio
+        </button>
+      </section>
     </div>
   </div>
 </div>

@@ -34,7 +34,6 @@ export class AgendamentosComponent implements OnInit {
   isSubmitting = false;
   isEditing = false;
 
-  // Form fields
   reservaId: number | null = null;
   laboratorioId: number | null = null;
   data: string = '';
@@ -46,7 +45,14 @@ export class AgendamentosComponent implements OnInit {
   planejamentoSelecionado: Planejamento | null = null;
   planejamentoId: number | null = null;
 
-  // Status enum para o template
+  codigoPlanoBusca = '';
+  isImportandoCodigo = false;
+
+  readonly hojeISO: string = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  })();
+
   StatusReserva = StatusReserva;
 
   ngOnInit(): void {
@@ -54,7 +60,6 @@ export class AgendamentosComponent implements OnInit {
     this.carregarLaboratorios();
     this.carregarPlanejamentos();
 
-    // Verifica se há um planejamento selecionado vindo do repositório
     const navigation = this.router.getCurrentNavigation();
     const state = navigation?.extras?.state || window.history.state;
 
@@ -68,7 +73,6 @@ export class AgendamentosComponent implements OnInit {
   }
 
   carregarPlanejamentos(): void {
-    // Lista planejamentos do professor (próprios + públicos de outros)
     this.planejamentoService.listar().subscribe({
       next: (planejamentos) => {
         this.planejamentos = planejamentos;
@@ -112,7 +116,6 @@ export class AgendamentosComponent implements OnInit {
   }
 
   abrirFormularioEdicao(reserva: Reserva): void {
-    // Só permite editar se estiver PENDENTE ou AGUARDANDO_AJUSTES
     if (reserva.status !== StatusReserva.PENDENTE && reserva.status !== StatusReserva.AGUARDANDO_AJUSTES) {
       this.notificationService.show('Apenas reservas pendentes ou aguardando ajustes podem ser editadas', 'error');
       return;
@@ -125,7 +128,6 @@ export class AgendamentosComponent implements OnInit {
     this.turma = reserva.turma || '';
     this.descricao = reserva.descricao || '';
 
-    // Separa data e hora
     const inicioDate = new Date(reserva.inicio);
     const fimDate = new Date(reserva.fim);
 
@@ -135,7 +137,6 @@ export class AgendamentosComponent implements OnInit {
 
     this.showForm = true;
 
-    // Verifica conflitos após abrir o formulário
     this.verificarConflitos();
   }
 
@@ -155,11 +156,55 @@ export class AgendamentosComponent implements OnInit {
     this.descricao = '';
     this.planejamentoSelecionado = null;
     this.planejamentoId = null;
+    this.codigoPlanoBusca = '';
     this.reservasConflitantes = [];
   }
 
+  importarPorCodigo(): void {
+    const codigo = (this.codigoPlanoBusca || '').trim().toUpperCase();
+    if (!codigo) {
+      this.notificationService.show('Informe um código', 'error');
+      return;
+    }
+    this.isImportandoCodigo = true;
+    this.planejamentoService.buscarPorCodigo(codigo).subscribe({
+      next: (planejamento) => {
+        this.planejamentoSelecionado = planejamento;
+        this.planejamentoId = planejamento.id;
+        if (!this.titulo) this.titulo = planejamento.titulo;
+        if (!this.descricao) this.descricao = planejamento.descricao;
+        this.notificationService.show(
+          `Plano "${planejamento.titulo}" importado com sucesso!`,
+          'success'
+        );
+        this.codigoPlanoBusca = '';
+        this.isImportandoCodigo = false;
+      },
+      error: (error) => {
+        this.isImportandoCodigo = false;
+        const mensagem = error?.error?.mensagem || 'Nenhum plano encontrado para o código informado';
+        this.notificationService.show(mensagem, 'error');
+      }
+    });
+  }
+
+  removerPlanoVinculado(): void {
+    this.planejamentoSelecionado = null;
+    this.planejamentoId = null;
+  }
+
+  onPlanejamentoSelecionado(id: number | null): void {
+    if (id == null) {
+      this.planejamentoSelecionado = null;
+      return;
+    }
+    const encontrado = this.planejamentos.find(p => p.id === id);
+    if (encontrado) {
+      this.planejamentoSelecionado = encontrado;
+    }
+  }
+
   onLaboratorioOuDataChange(): void {
-    // Verifica conflitos quando laboratório ou data mudarem
     if (this.laboratorioId && this.data) {
       this.verificarConflitos();
     } else {
@@ -174,7 +219,6 @@ export class AgendamentosComponent implements OnInit {
 
     this.isLoadingConflitos = true;
 
-    // Cria início e fim do dia selecionado
     const inicioDia = new Date(`${this.data}T00:00:00`);
     const fimDia = new Date(`${this.data}T23:59:59`);
 
@@ -184,7 +228,6 @@ export class AgendamentosComponent implements OnInit {
       fimDia.toISOString()
     ).subscribe({
       next: (reservas) => {
-        // Filtra apenas reservas que não são a atual (em caso de edição)
         this.reservasConflitantes = reservas.filter(r => r.id !== this.reservaId);
         this.isLoadingConflitos = false;
       },
@@ -197,36 +240,29 @@ export class AgendamentosComponent implements OnInit {
   }
 
   onSubmit(): void {
-    // Validação de campos obrigatórios
     if (!this.laboratorioId || !this.data || !this.horaInicio || !this.horaFim || !this.titulo) {
       this.notificationService.show('Por favor, preencha todos os campos obrigatórios.', 'error');
       return;
     }
 
-    // Validação: título mínimo 3 caracteres
     if (this.titulo.length < 3) {
       this.notificationService.show('O título deve ter no mínimo 3 caracteres.', 'error');
       return;
     }
 
-    // Combina data e hora (mesma data para início e fim)
     const inicio = new Date(`${this.data}T${this.horaInicio}`);
     const fim = new Date(`${this.data}T${this.horaFim}`);
 
-    // Validação: hora de fim deve ser depois da hora de início
     if (fim <= inicio) {
       this.notificationService.show('A hora de fim deve ser posterior à hora de início.', 'error');
       return;
     }
 
-    // Validação: não pode ser no passado
-    const agora = new Date();
-    if (inicio < agora) {
-      this.notificationService.show('Não é possível criar reservas no passado.', 'error');
+    if (this.data < this.hojeISO) {
+      this.notificationService.show('Não é possível criar reservas em datas anteriores a hoje.', 'error');
       return;
     }
 
-    // Validação: verifica conflitos localmente antes de enviar
     if (this.temConflitoLocal(inicio, fim)) {
       this.notificationService.show('Este horário conflita com outra reserva já existente.', 'error');
       return;
@@ -243,8 +279,6 @@ export class AgendamentosComponent implements OnInit {
     return this.reservasConflitantes.some(reserva => {
       const reservaInicio = new Date(reserva.inicio);
       const reservaFim = new Date(reserva.fim);
-
-      // Verifica se há sobreposição
       return (inicio < reservaFim && fim > reservaInicio);
     });
   }

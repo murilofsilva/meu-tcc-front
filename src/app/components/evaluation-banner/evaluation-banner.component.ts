@@ -1,12 +1,10 @@
 import { Component, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-/**
- * Banner temporário de convite para avaliar o sistema.
- * Dispensa por sessão via LocalStorage.
- */
 const STORAGE_KEY = 'avaliacao-banner-dispensado';
-const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfzx7_5XpBwffSpfGfhq83CndvNoGoT5EGgsUQevkI1eXAUQg/viewform';
+
+const FORM_URL_PROFESSORES = 'https://docs.google.com/forms/d/e/1FAIpQLSfzx7_5XpBwffSpfGfhq83CndvNoGoT5EGgsUQevkI1eXAUQg/viewform';
+const FORM_URL_ALUNOS = 'https://docs.google.com/forms/d/e/1FAIpQLSerTc7htnA7az01e_s0j21dC6IBKPwwc_DLqEAc_eG5fa0gKA/viewform';
 
 @Component({
   selector: 'app-evaluation-banner',
@@ -21,16 +19,27 @@ const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfzx7_5XpBwffSpfGfhq8
       >
         <p class="text-sm sm:text-base flex items-center gap-2">
           <span aria-hidden="true">📣</span>
-          Sua opinião é importante! Ajude-nos a melhorar respondendo a uma rápida avaliação do sistema.
+          Sua opinião é importante! Avalie o sistema escolhendo a opção que corresponde ao seu perfil de teste.
         </p>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-sm hidden sm:inline">Avaliar como:</span>
           <a
-            [href]="formUrl"
+            [href]="formUrlProfessores"
             target="_blank"
             rel="noopener noreferrer"
             class="bg-white text-red-700 px-3 py-1 rounded font-semibold text-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Avaliar o sistema como professor ou gestor"
           >
-            Avaliar o sistema
+            Professor/Gestor
+          </a>
+          <a
+            [href]="formUrlAlunos"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="bg-white text-red-700 px-3 py-1 rounded font-semibold text-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label="Avaliar o sistema como estudante"
+          >
+            Estudante
           </a>
           <button
             type="button"
@@ -48,7 +57,8 @@ const FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfzx7_5XpBwffSpfGfhq8
   `
 })
 export class EvaluationBannerComponent {
-  readonly formUrl = FORM_URL;
+  readonly formUrlProfessores = FORM_URL_PROFESSORES;
+  readonly formUrlAlunos = FORM_URL_ALUNOS;
   private dispensado = signal<boolean>(this.lerStorage());
 
   visivel = computed(() => !this.dispensado());

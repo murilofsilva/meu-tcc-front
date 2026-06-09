@@ -268,6 +268,9 @@
     (click)="fecharModalDetalhes()"
   >
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="detalhes-titulo"
       class="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-fade-in-up"
       (click)="$event.stopPropagation()"
     >
@@ -275,14 +278,15 @@
       <div class="p-6 border-b border-gray-200 sticky top-0 bg-white">
         <div class="flex justify-between items-start">
           <div class="flex-1">
-            <h3 class="text-2xl font-bold text-gray-800">{{ selectedPlanejamento.titulo }}</h3>
+            <h3 id="detalhes-titulo" class="text-2xl font-bold text-gray-800">{{ selectedPlanejamento.titulo }}</h3>
             <p class="text-sm text-gray-600 mt-1">Por: {{ selectedPlanejamento.author.nome }}</p>
           </div>
           <button
             (click)="fecharModalDetalhes()"
+            aria-label="Fechar detalhes do plano"
             class="text-gray-500 hover:text-gray-700 transition-colors ml-4"
           >
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
             </svg>
           </button>
@@ -396,6 +400,9 @@
   (click)="fecharModalImportar()"
 >
   <div
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="importar-titulo"
     class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in"
     (click)="$event.stopPropagation()"
   >
@@ -403,16 +410,17 @@
     <div class="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-indigo-600">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-2xl font-bold text-white">Importar para Reserva</h3>
+          <h3 id="importar-titulo" class="text-2xl font-bold text-white">Importar para Reserva</h3>
           <p class="text-blue-100 text-sm mt-1" *ngIf="planejamentoParaImportar">
             Plano: {{ planejamentoParaImportar.titulo }}
           </p>
         </div>
         <button
           (click)="fecharModalImportar()"
+          aria-label="Fechar janela de importação"
           class="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
         >
-          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+          <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
           </svg>
         </button>
